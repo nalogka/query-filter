@@ -1,0 +1,30 @@
+###>проекты IDE PhpStorm ###
+.idea
+###<проекты IDE PhpStorm ###
+/vendor/
+/composer.lock
+
+# netbeans project files
+/nbproject/
+
+# zend studio for eclipse project files
+.buildpath
+.project
+.settings
+
+# windows thumbnail cache
+Thumbs.db
+
+# composer itself is not needed
+composer.phar
+
+# Mac DS_Store Files
+.DS_Store
+
+# vagrant runtime
+/.vagrant
+
+# phpunit itself is not needed
+/phpunit.phar
+# local phpunit config
+/phpunit.xml

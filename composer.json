@@ -1,0 +1,36 @@
+{
+    "name": "nalogka/query-filter",
+    "keywords": ["nalogka", "query filter"],
+    "homepage": "https://bitbucket.org/nalogka/query-filter",
+    "description": "Набор классов для генерации строки для фильтрации результатов запроса к базе.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Anton Endiuskin",
+            "email": "ultoniq@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=7.1"
+    },
+    "suggest": {
+        "doctrine/orm": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nalogka\\QueryFilter\\": "src/",
+            "Nalogka\\QueryFilter\\Tests\\": "tests/"
+        }
+    },
+    "repositories": [{
+        "type": "composer",
+        "url": "https://pkgs.nalogka.com"
+    }],
+    "require-dev": {
+        "doctrine/orm": "*",
+        "codeception/base": "^2.5",
+        "guzzlehttp/guzzle": "^6.3"
+    }
+}
