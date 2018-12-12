@@ -13,6 +13,7 @@ use Doctrine\ORM\QueryBuilder;
 use Nalogka\QueryFilter\QueryFilter;
 use Nalogka\QueryFilter\QueryFilterDeniedParamException;
 use Nalogka\QueryFilter\QueryFilterParsingException;
+use Nalogka\QueryFilter\QueryStringParser;
 use UnitTester;
 
 class QueryFilterTest extends Unit
@@ -86,7 +87,7 @@ class QueryFilterTest extends Unit
      */
     public function testParsing(string $filterString, array $expected)
     {
-        $this->assertEquals($expected, QueryFilter::parse($filterString));
+        $this->assertEquals($expected, QueryStringParser::parse($filterString));
     }
 
     /**
@@ -99,7 +100,7 @@ class QueryFilterTest extends Unit
     public function testParsingError($erroneousFilterString)
     {
         $this->expectException(QueryFilterParsingException::class);
-        QueryFilter::parse($erroneousFilterString);
+        QueryStringParser::parse($erroneousFilterString);
     }
 
     public function provideTestParsing()

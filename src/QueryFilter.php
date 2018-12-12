@@ -3,6 +3,7 @@
 namespace Nalogka\QueryFilter;
 
 use Doctrine\DBAL\Types\StringType;
+use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 
@@ -20,28 +21,6 @@ use Doctrine\ORM\QueryBuilder;
  */
 class QueryFilter
 {
-    const TOKEN_ESCAPE = '\\';
-    const TOKEN_CONDITION_DIVIDER = ';';
-    const TOKEN_OPERATION_EQ = '=';
-    const TOKEN_OPERATION_NEQ = '!=';
-    const TOKEN_OPERATION_GT = '>';
-    const TOKEN_OPERATION_GTE = '>=';
-    const TOKEN_OPERATION_LT = '<';
-    const TOKEN_OPERATION_LTE = '<=';
-
-    const SPECIAL_TOKENS = [
-        '_esc_' => self::TOKEN_ESCAPE,
-        '_div_' => self::TOKEN_CONDITION_DIVIDER,
-    ];
-    const OPERATION_TOKENS = [
-        '_eq_'  => self::TOKEN_OPERATION_EQ,
-        '_neq_' => self::TOKEN_OPERATION_NEQ,
-        '_gte_' => self::TOKEN_OPERATION_GTE,
-        '_gt_'  => self::TOKEN_OPERATION_GT,
-        '_lte_' => self::TOKEN_OPERATION_LTE,
-        '_lt_'  => self::TOKEN_OPERATION_LT,
-    ];
-
     /**
      * @var QueryBuilder
      */
@@ -108,8 +87,8 @@ class QueryFilter
         $entityMetadata = $qb->getEntityManager()->getClassMetadata($fromPart->getFrom());
         $alias = $fromPart->getAlias();
         $paramIdx = 0;
-        $parsedFilter = self::parse($filterString);
-        $parsedPreset = self::parse($this->preset);
+        $parsedFilter = QueryStringParser::parse($filterString);
+        $parsedPreset = QueryStringParser::parse($this->preset);
         $allowedParams = $this->fixAllowedFilterParams($parsedPreset);
         $this->validateFilter($allowedParams, $parsedFilter);
         $parsedConditions = self::applyPreset($parsedFilter, $parsedPreset);
@@ -151,53 +130,6 @@ class QueryFilter
     public function getQueryBuilder(): QueryBuilder
     {
         return $this->queryBuilder;
-    }
-
-    /**
-     * Разбирает строку фильтра на отдельные условия.
-     *
-     * @param string $filterString
-     *
-     * @return array Каждый элемент массива - это набор условий, соединяемых по "ИЛИ".
-     *               А сам массив соединяется по "И".
-     * @throws QueryFilterParsingException
-     */
-    public static function parse(string $filterString): array
-    {
-        $conditions = [];
-        $restoreEscaped = array_merge(self::SPECIAL_TOKENS, self::OPERATION_TOKENS);
-        $escape = function ($token) {
-            return self::TOKEN_ESCAPE . $token;
-        };
-        $safeFilterString = strtr($filterString, array_flip(array_map($escape, $restoreEscaped)));
-        $operationsRegex = implode('|', array_map(function ($op) {
-            return preg_quote($op, '#');
-        }, self::OPERATION_TOKENS));
-        $splitConditionRegex = '#^(.*?)(' . $operationsRegex . ')(.*)$#';
-        foreach (explode(self::TOKEN_CONDITION_DIVIDER, $safeFilterString) as $condition) {
-            $condition = ltrim($condition);
-            if (!$condition) {
-                continue;
-            }
-            if (!preg_match($splitConditionRegex, $condition, $matches)) {
-                throw new QueryFilterParsingException('Не указана операция', $condition);
-            }
-            if (!$matches[1]) {
-                throw new QueryFilterParsingException('Не указан параметр для фильтрации', $condition);
-            }
-
-            $param = rtrim(strtr($matches[1], $restoreEscaped));
-            $operation = $matches[2];
-            $value = strtr($matches[3], $restoreEscaped);
-
-            if ($operation === self::TOKEN_OPERATION_NEQ) {
-                $conditions[] = [[$param, $operation, $value]];
-            } else {
-                $conditions[$param.$operation][] = [$param, $operation, $value];
-            }
-        }
-
-        return array_values($conditions);
     }
 
     private static function toCamelCase($paramName)
