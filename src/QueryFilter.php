@@ -113,8 +113,15 @@ class QueryFilter
                         $operator = 'LIKE';
                     }
                 }
-                $expr->add(new Expr\Comparison($alias . '.' . $field, $operator, $paramName));
-                $qb->setParameter($paramName, $value);
+                if (isset($entityMetadata->discriminatorColumn['name']) && $entityMetadata->discriminatorColumn['name'] === $field) {
+                    if (empty($entityMetadata->discriminatorMap[$value])) {
+                        throw new QueryFilterException(sprintf('Указан несуществующий тип (%s) для параметра %s', $value, $field));
+                    }
+                    $expr->add(new Expr\Comparison($alias, 'INSTANCE OF', $entityMetadata->discriminatorMap[$value]));
+                } else {
+                    $expr->add(new Expr\Comparison($alias . '.' . $field, $operator, $paramName));
+                    $qb->setParameter($paramName, $value);
+                }
             }
             if ($expr->count() > 0) {
                 $qb->andWhere($expr);
