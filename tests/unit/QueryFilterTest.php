@@ -30,14 +30,15 @@ class QueryFilterTest extends Unit
     {
         $qb = $this->createQueryBuilder(['param' => Type::INTEGER]);
         $qb->select('u')->from('User', 'u');
-        $allowedParams = ['param', 'param2', 'param3'];
+        $allowedParams = ['param', 'param2', 'param3', 'param4'];
         $filter = new QueryFilter($qb, $allowedParams);
-        $filter->apply('param<100;param>14;param2=some*;param2=*string*;param3=done');
+        $filter->apply('param<100;param>14;param2=some*;param2=*string*;param3=done;param4=one;param4=two;param4=three');
 
         $this->assertEquals(
             'u.param < "100" AND u.param > "14"'
-                .' AND (u.param2 LIKE "some%" OR u.param2 LIKE "%string%")'
-                .' AND u.param3 = "done"',
+            .' AND (u.param2 LIKE "some%" OR u.param2 LIKE "%string%")'
+            .' AND u.param3 = "done"'
+            .' AND u.param4 IN ("one","two","three")',
             $this->populateCondition((string)$qb->getDQLPart('where'), $qb->getParameters())
         );
     }
@@ -178,7 +179,13 @@ class QueryFilterTest extends Unit
     {
         $replaces = [];
         foreach ($params as $p) {
-            $replaces[':' . $p->getName()] = '"' . $p->getValue() . '"';
+            if (is_array($value = $p->getValue())) {
+                $value = '"' . implode('","', $value) . '"';
+            } else {
+                $value = '"' . $value . '"';
+            }
+
+            $replaces[':' . $p->getName()] = $value;
         }
 
         return strtr($cond, $replaces);
